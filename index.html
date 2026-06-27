@@ -32,21 +32,34 @@
 
 <body>
 
-<h2>📍 My Location Test</h2>
+<h2>📍 My Location (Neighbourhood)</h2>
 
 <div class="card">
-    <div class="value"><span class="label">Place:</span> <span id="place">Loading...</span></div>
+    <div class="value"><span class="label">Neighbourhood:</span> <span id="place">Loading...</span></div>
     <div class="value"><span class="label">Latitude:</span> <span id="lat">-</span></div>
     <div class="value"><span class="label">Longitude:</span> <span id="lon">-</span></div>
     <div class="value"><span class="label">Accuracy:</span> <span id="acc">-</span> m</div>
 </div>
 
 <script>
-async function getPlace(lat, lon) {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+async function getNeighbourhood(lat, lon) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lon}`;
+
     const res = await fetch(url);
     const data = await res.json();
-    return data.display_name || "Unknown location";
+
+    const addr = data.address || {};
+
+    // Try to extract neighbourhood in best order
+    return (
+        addr.neighbourhood ||
+        addr.suburb ||
+        addr.city_district ||
+        addr.residential ||
+        addr.city ||
+        data.display_name ||
+        "Unknown location"
+    );
 }
 
 if ("geolocation" in navigator) {
@@ -61,10 +74,10 @@ if ("geolocation" in navigator) {
             document.getElementById("acc").textContent = acc;
 
             try {
-                const place = await getPlace(lat, lon);
+                const place = await getNeighbourhood(lat, lon);
                 document.getElementById("place").textContent = place;
             } catch (e) {
-                document.getElementById("place").textContent = "Could not fetch place";
+                document.getElementById("place").textContent = "Could not fetch neighbourhood";
             }
         },
         (err) => {
