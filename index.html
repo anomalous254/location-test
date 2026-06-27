@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Location Test</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+        .value {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>📍 My Location Test</h2>
+
+<div class="card">
+    <div class="value"><span class="label">Place:</span> <span id="place">Loading...</span></div>
+    <div class="value"><span class="label">Latitude:</span> <span id="lat">-</span></div>
+    <div class="value"><span class="label">Longitude:</span> <span id="lon">-</span></div>
+    <div class="value"><span class="label">Accuracy:</span> <span id="acc">-</span> m</div>
+</div>
+
+<script>
+async function getPlace(lat, lon) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.display_name || "Unknown location";
+}
+
+if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            const acc = pos.coords.accuracy;
+
+            document.getElementById("lat").textContent = lat;
+            document.getElementById("lon").textContent = lon;
+            document.getElementById("acc").textContent = acc;
+
+            try {
+                const place = await getPlace(lat, lon);
+                document.getElementById("place").textContent = place;
+            } catch (e) {
+                document.getElementById("place").textContent = "Could not fetch place";
+            }
+        },
+        (err) => {
+            document.getElementById("place").textContent =
+                "Location permission denied";
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+} else {
+    alert("Geolocation not supported");
+}
+</script>
+
+</body>
+</html>
